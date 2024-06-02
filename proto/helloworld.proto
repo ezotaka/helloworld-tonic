@@ -10,6 +10,9 @@ message HelloRequest { string name = 1; }
 
 message HelloReply { string message = 1; }
 
-message ChatRequest { string message = 1; }
+message ChatRequest {
+  string name = 1;
+  string message = 2;
+}
 
 message ChatReply { string message = 1; }

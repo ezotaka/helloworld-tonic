@@ -37,18 +37,26 @@ impl Greeter for MyGreeter {
         &self,
         request: tonic::Request<tonic::Streaming<ChatRequest>>,
     ) -> Result<tonic::Response<Self::ChatStream>, tonic::Status> {
-        println!("Chat");
+        let name = request
+            .metadata()
+            .get("name")
+            .map(|val| val.to_str().unwrap_or("unknown"))
+            .unwrap_or("unknown")
+            .to_owned();
+        println!("{} has connected", name);
 
         let mut stream = request.into_inner();
 
         let output = async_stream::try_stream! {
             while let Some(chat) = stream.next().await {
                 let chat = chat?;
+                println!("{}: {}", name, chat.message);
                 let reply = ChatReply {
                     message: format!("Reply: {}", chat.message),
                 };
                 yield reply;
             }
+            println!("{} is out", name);
         };
         Ok(Response::new(Box::pin(output) as Self::ChatStream))
     }
