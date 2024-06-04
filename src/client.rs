@@ -1,8 +1,7 @@
 use std::io::Write;
-use std::str::FromStr;
 
 use hello_world::greeter_client::GreeterClient;
-use hello_world::{ChatRequest, HelloRequest};
+use hello_world::{ChatRequest, DirectMailRequest};
 use tokio::io::{self, AsyncBufReadExt};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -49,6 +48,13 @@ async fn chat(client: &mut GreeterClient<Channel>) -> Result<(), Box<dyn std::er
         while let Ok(Some(line)) = lines.next_line().await {
             if line == "quit" || line == "bye" || line == "exit" {
                 break;
+            } else if line == "dm" {
+                let dummy_text = "test".to_string();
+                let dm_req = tonic::Request::new(DirectMailRequest {
+                    name: dummy_text.clone(),
+                    message: dummy_text.clone(),
+                });
+                continue;
             }
             let req = ChatRequest {
                 name: name.clone(),
@@ -68,6 +74,13 @@ async fn chat(client: &mut GreeterClient<Channel>) -> Result<(), Box<dyn std::er
     }
     let response = client.chat(request).await?;
     let mut inbound = response.into_inner();
+
+    let dummy_text = "test".to_string();
+    let dm_req = tonic::Request::new(DirectMailRequest {
+        name: dummy_text.clone(),
+        message: dummy_text.clone(),
+    });
+    client.direct_mail(dm_req).await?;
 
     while let Some(chat) = inbound.message().await? {
         println!("CHAT={:?}", chat);

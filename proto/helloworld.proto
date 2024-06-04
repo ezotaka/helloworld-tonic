@@ -4,6 +4,7 @@ package helloworld;
 service Greeter {
   rpc SayHello(HelloRequest) returns (HelloReply);
   rpc Chat(stream ChatRequest) returns (stream ChatReply);
+  rpc DirectMail(DirectMailRequest) returns (DirectMailReply);
 }
 
 message HelloRequest { string name = 1; }
@@ -16,3 +17,10 @@ message ChatRequest {
 }
 
 message ChatReply { string message = 1; }
+
+message DirectMailRequest {
+  string name = 1;
+  string message = 2;
+}
+
+message DirectMailReply { string message = 1; }
