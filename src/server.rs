@@ -1,4 +1,4 @@
-use std::pin::Pin;
+use std::{net::SocketAddr, pin::Pin};
 
 use tokio::sync::broadcast::{self, Sender};
 use tonic::{transport::Server, Request, Response, Status};
@@ -109,7 +109,8 @@ impl Greeter for MyGreeter {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::1]:50051".parse()?;
+    let local_ip = helloworld_tonic::get_local_ip().await?;
+    let addr = SocketAddr::new(local_ip, 50051);
     let greeter = MyGreeter::new();
 
     Server::builder()

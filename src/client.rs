@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::net::SocketAddr;
 
 use hello_world::greeter_client::GreeterClient;
 use hello_world::{ChatRequest, DirectMailRequest};
@@ -14,7 +15,9 @@ pub mod hello_world {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut client = GreeterClient::connect("http://[::1]:50051").await?;
+    let local_ip = helloworld_tonic::get_local_ip().await?;
+    let addr = format!("http://{}:50051", local_ip);
+    let mut client = GreeterClient::connect(addr).await?;
 
     // let request = tonic::Request::new(HelloRequest {
     //     name: "Tonic".into(),
