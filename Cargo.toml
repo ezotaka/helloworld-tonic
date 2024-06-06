@@ -8,10 +8,16 @@ edition = "2021"
 [[bin]]
 name = "helloworld-server"
 path = "src/server.rs"
+required-features = ["tls"]
 
 [[bin]]
 name = "helloworld-client"
 path = "src/client.rs"
+required-features = ["tls"]
+
+[features]
+tls = ["tonic/tls"]
+default = ["tls"]
 
 [dependencies]
 tonic = "0.9"

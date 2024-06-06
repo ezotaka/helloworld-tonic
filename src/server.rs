@@ -1,7 +1,10 @@
 use std::{net::SocketAddr, pin::Pin};
 
 use tokio::sync::broadcast::{self, Sender};
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::{
+    transport::{Identity, Server, ServerTlsConfig},
+    Request, Response, Status,
+};
 
 use tokio_stream::{Stream, StreamExt};
 
@@ -109,11 +112,18 @@ impl Greeter for MyGreeter {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let data_dir = std::path::PathBuf::from_iter([std::env!("CARGO_MANIFEST_DIR"), "data"]);
+    let cert = std::fs::read_to_string(data_dir.join("tls/server.pem"))?;
+    let key = std::fs::read_to_string(data_dir.join("tls/server.key"))?;
+
+    let identity = Identity::from_pem(cert, key);
+
     let local_ip = helloworld_tonic::get_local_ip().await?;
     let addr = SocketAddr::new(local_ip, 50051);
     let greeter = MyGreeter::new();
 
     Server::builder()
+        .tls_config(ServerTlsConfig::new().identity(identity))?
         .add_service(GreeterServer::new(greeter))
         .serve(addr)
         .await?;

@@ -7,7 +7,7 @@ use tokio::io::{self, AsyncBufReadExt};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::metadata::MetadataValue;
-use tonic::transport::Channel;
+use tonic::transport::{Certificate, Channel, ClientTlsConfig};
 
 pub mod hello_world {
     tonic::include_proto!("helloworld");
@@ -15,9 +15,23 @@ pub mod hello_world {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let data_dir = std::path::PathBuf::from_iter([std::env!("CARGO_MANIFEST_DIR"), "data"]);
+    let pem = std::fs::read_to_string(data_dir.join("tls/ca.pem"))?;
+    let ca = Certificate::from_pem(pem);
+
+    let tls = ClientTlsConfig::new()
+        .ca_certificate(ca)
+        .domain_name("example.com");
+
     let local_ip = helloworld_tonic::get_local_ip().await?;
-    let addr = format!("http://{}:50051", local_ip);
-    let mut client = GreeterClient::connect(addr).await?;
+    let addr = format!("https://{}:50051", local_ip);
+
+    let channel = Channel::from_shared(addr)?
+        .tls_config(tls)?
+        .connect()
+        .await?;
+
+    let mut client = GreeterClient::new(channel);
 
     // let request = tonic::Request::new(HelloRequest {
     //     name: "Tonic".into(),
